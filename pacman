@@ -1,0 +1,75 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#
+#       pacman
+#       
+#       Copyright 2010 Raphael Michel <webmaster@raphaelmichel.de>
+#       
+#       This program is free software; you can redistribute it and/or modify
+#       it under the terms of the GNU General Public License as published by
+#       the Free Software Foundation; either version 2 of the License, or
+#       (at your option) any later version.
+#       
+#       This program is distributed in the hope that it will be useful,
+#       but WITHOUT ANY WARRANTY; without even the implied warranty of
+#       MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#       GNU General Public License for more details.
+#       
+#       You should have received a copy of the GNU General Public License
+#       along with this program; if not, write to the Free Software
+#       Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+#       MA 02110-1301, USA.
+
+import curses, pacman
+
+def erase_menu(stdscr, menu_y):
+    stdscr.move(menu_y, 0)
+    stdscr.clrtoeol()
+    stdscr.move(menu_y+1, 0)
+    stdscr.clrtoeol()
+
+def display_menu(stdscr, menu_y):
+    erase_menu(stdscr, menu_y)
+    stdscr.addstr(menu_y, 4,
+                  'R)estart Game, O)ptions, H)ighscores, C)redits, Q)uit')
+
+def keyloop(stdscr):
+	stdscr.clear()
+	stdscr_y, stdscr_x = stdscr.getmaxyx()
+	menu_y = (stdscr_y-3)-1
+	display_menu(stdscr, menu_y)
+	
+	subwin = stdscr.subwin(stdscr_y-3, stdscr_x, 0, 0)
+
+	pac = pacman.Pacman(subwin, stdscr)
+
+	# Main loop:
+	while (1):  
+		c = stdscr.getch()        
+		if 0<c<256:
+			c = chr(c)
+			if c in 'Qq':
+				break
+			elif c in 'Oo':
+				pac.statusline('ERROR: Not yet implemented!')
+			elif c in 'Hh':
+				pac.statusline('ERROR: Not yet implemented!')
+			elif c in 'Rr':
+				pac.statusline('ERROR: Not yet implemented!')
+			elif c in 'Cc':
+				pac.display_credits()
+			else: pass        
+		elif c == curses.KEY_UP: pass
+		elif c == curses.KEY_DOWN: pass
+		elif c == curses.KEY_LEFT: pass
+		elif c == curses.KEY_RIGHT: pass
+		else:
+			# Ignore incorrect keys
+			pass         
+
+def main(stdscr):
+	keyloop(stdscr)
+	return 0
+
+if __name__ == '__main__':
+    curses.wrapper(main)
