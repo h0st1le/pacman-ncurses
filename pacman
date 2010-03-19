@@ -32,7 +32,7 @@ def keyloop(stdscr):
 	subwin = stdscr.subwin(stdscr_y-2, stdscr_x, 0, 0)
 
 	pac = pacman.Pacman(subwin, stdscr)
-	pac.display_menu(stdscr, menu_y)
+	pac.display_startmenu(stdscr, menu_y)
 
 	# Main loop:
 	while (1):  
@@ -45,10 +45,14 @@ def keyloop(stdscr):
 				pac.statusline('ERROR: Not yet implemented!', 2)
 			elif c in 'Hh':
 				pac.statusline('ERROR: Not yet implemented!', 2)
-			elif c in 'Rr':
+			elif c in 'RrSs':
 				pac.start_game('data/default.pacman')
 			elif c in 'Cc':
 				pac.display_credits()
+			elif c in 'Bb':
+				pac.back()
+			elif c in 'Pp':
+				pac.toggle_pause()
 			else: pass        
 		elif c == curses.KEY_UP: pac.move(curses.KEY_UP)
 		elif c == curses.KEY_DOWN: pac.move(curses.KEY_DOWN)

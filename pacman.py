@@ -28,6 +28,7 @@ class Pacman:
 		self.mscr = mscr
 		Y, X = self.scr.getmaxyx()
 		self.X, self.Y = X-2, Y-2-1
+		self.running = False
 		
 		# initialisation
 		self.game = []
@@ -42,15 +43,69 @@ class Pacman:
 		curses.init_pair(4, curses.COLOR_CYAN, 0)
 		curses.init_pair(5, curses.COLOR_GREEN, 0)
 		
+		# instructions
+		self.scr.erase()
+		self.scr.addstr(0,0,u"""Welcome to pacman-curses, the python-powered pacman game in plain text.
+ELEMENTS
+  \u25A0  borders
+  C  is your game figure
+  \u00b7  dots to eat
+  \u2639  the ghosts
+  \u25c3\u25b9 teleporters
+  \u25cc  home of the ghosts
+KEYS
+  arrow keys to move
+  S/R   start a new game
+  O     show and edit some options
+  H     show highscores
+  C     show credits
+  Q     quit game
+  P     pause game
+  B     return to game""".encode("utf-8"))
+		self.scr.refresh()
+		
+	def back(self):
+		# return to the game window after viewing for example the credits
+		self.draw_game(self.game)
+		
+	def display_mainmenu(self, stdscr=None, menu_y = None):
+		if menu_y == None:
+			stdscr_y, stdscr_x = self.mscr.getmaxyx()
+			menu_y = (stdscr_y-2)-1
+		if stdscr == None:
+			stdscr = self.mscr
+		stdscr.addstr(menu_y, 4,'P)ause/Resume, R)estart Game, O)ptions, H)ighscores, C)redits, Q)uit')
+		
+	def display_startmenu(self, stdscr=None, menu_y = None):
+		if menu_y == None:
+			stdscr_y, stdscr_x = self.mscr.getmaxyx()
+			menu_y = (stdscr_y-2)-1
+		if stdscr == None:
+			stdscr = self.mscr
+		stdscr.addstr(menu_y, 4,'S)tart Game, O)ptions, H)ighscores, C)redits, Q)uit')
+		
 	def display_menu(self, stdscr=None, menu_y = None):
 		if menu_y == None:
 			stdscr_y, stdscr_x = self.mscr.getmaxyx()
 			menu_y = (stdscr_y-2)-1
 		if stdscr == None:
 			stdscr = self.mscr
-		stdscr.addstr(menu_y, 4,'R)estart Game, O)ptions, H)ighscores, C)redits, Q)uit')
+		stdscr.addstr(menu_y, 4,'B)ack to game, O)ptions, H)ighscores, C)redits, Q)uit')
+		
+	def pause_game(self):
+		self.running = False
+		
+	def resume_game(self):
+		self.running = True
+		
+	def toggle_pause(self):
+		if self.running == False: self.running = True
+		else: self.running = False
 		
 	def draw_game(self, field):
+		if field == []:
+			self.statusline('ERROR: Press R to start a game', 2)
+			return False
 		# draws the field
 		self.scr.erase()
 		y = 0
@@ -95,7 +150,7 @@ class Pacman:
 		except curses.error:
 			self.statusline('ERROR: Terminal too small?', 2)
 		
-		self.display_menu()
+		self.display_mainmenu()
 		self.scr.refresh()
 		
 	def start_game(self, fieldfile):
@@ -118,7 +173,7 @@ class Pacman:
 				elif char == '.':
 					arr = None
 				elif char == ' ':
-					arr = None
+					arr = ' '
 				elif char == 'C':
 					arr = 'C'
 					pac = (y,x)
@@ -190,7 +245,7 @@ class Pacman:
 			newpos = (oldpos[0], 1)
 			
 		# a free field?
-		if self.empty[newpos[0]][newpos[1]] == None:
+		if self.empty[newpos[0]][newpos[1]] in (None, ' '):
 			self.game[oldpos[0]][oldpos[1]] = self.getempty(oldpos[0], oldpos[1])
 			self.game[newpos[0]][newpos[1]] = 'C'
 			self.positions['pacman'] = newpos
@@ -213,15 +268,19 @@ class Pacman:
 		return 0
 		
 	def display_credits(self):
+		self.pause_game()
 		self.scr.erase()
 		self.statusline('')
-		self.scr.addstr(0,0,"COPYRIGHT")
-		self.scr.addstr(1,5,"Copyright 2010 geeks' factory <www.geeksfactory.de>")
-		self.scr.addstr(3,0,"DEVELOPMENT")
-		self.scr.addstr(4,5,"Raphael Michel <pacman@raphaelmichel.de>")
-		self.scr.addstr(6,0,"LICENSE")
-		self.scr.addstr(7,5,"pacman-ncurses is licensed under the terms of the GNU General Public license")
-		self.scr.addstr(9,0,"THANKS")
-		self.scr.addstr(10,5,"to kiwi11000 for the idea ;-)")
+		self.scr.addstr(0,0,"""COPYRIGHT
+  Copyright 2010 geeks' factory <www.geeksfactory.de>
+	
+DEVELOPMENT
+  Raphael Michel <pacman@raphaelmichel.de>
+	
+LICENSE
+  pacman-ncurses is licensed under the terms of the GNU General Public license
+	
+THANKS
+  to kiwi11000 for the idea ;-)""")
 		self.display_menu()
 		self.scr.refresh()
