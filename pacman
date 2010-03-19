@@ -20,28 +20,19 @@
 #       Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #       MA 02110-1301, USA.
 
-import curses, pacman
-
-def erase_menu(stdscr, menu_y):
-    stdscr.move(menu_y, 0)
-    stdscr.clrtoeol()
-    stdscr.move(menu_y+1, 0)
-    stdscr.clrtoeol()
-
-def display_menu(stdscr, menu_y):
-    erase_menu(stdscr, menu_y)
-    stdscr.addstr(menu_y, 4,
-                  'R)estart Game, O)ptions, H)ighscores, C)redits, Q)uit')
+import curses, pacman, locale
+locale.setlocale(locale.LC_ALL,"")
 
 def keyloop(stdscr):
 	stdscr.clear()
+	curses.start_color()
 	stdscr_y, stdscr_x = stdscr.getmaxyx()
-	menu_y = (stdscr_y-3)-1
-	display_menu(stdscr, menu_y)
+	menu_y = (stdscr_y-2)-1
 	
-	subwin = stdscr.subwin(stdscr_y-3, stdscr_x, 0, 0)
+	subwin = stdscr.subwin(stdscr_y-2, stdscr_x, 0, 0)
 
 	pac = pacman.Pacman(subwin, stdscr)
+	pac.display_menu(stdscr, menu_y)
 
 	# Main loop:
 	while (1):  
@@ -51,20 +42,19 @@ def keyloop(stdscr):
 			if c in 'Qq':
 				break
 			elif c in 'Oo':
-				pac.statusline('ERROR: Not yet implemented!')
+				pac.statusline('ERROR: Not yet implemented!', 2)
 			elif c in 'Hh':
-				pac.statusline('ERROR: Not yet implemented!')
+				pac.statusline('ERROR: Not yet implemented!', 2)
 			elif c in 'Rr':
-				pac.statusline('ERROR: Not yet implemented!')
+				pac.start_game('data/default.pacman')
 			elif c in 'Cc':
 				pac.display_credits()
 			else: pass        
-		elif c == curses.KEY_UP: pass
-		elif c == curses.KEY_DOWN: pass
-		elif c == curses.KEY_LEFT: pass
-		elif c == curses.KEY_RIGHT: pass
+		elif c == curses.KEY_UP: pac.move(curses.KEY_UP)
+		elif c == curses.KEY_DOWN: pac.move(curses.KEY_DOWN)
+		elif c == curses.KEY_LEFT: pac.move(curses.KEY_LEFT)
+		elif c == curses.KEY_RIGHT: pac.move(curses.KEY_RIGHT)
 		else:
-			# Ignore incorrect keys
 			pass         
 
 def main(stdscr):

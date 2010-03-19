@@ -19,19 +19,193 @@
 #       along with this program; if not, write to the Free Software
 #       Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #       MA 02110-1301, USA.
+import curses
 
 class Pacman:
 	def __init__(self, scr, mscr):
+		# make them global
 		self.scr = scr
 		self.mscr = mscr
 		Y, X = self.scr.getmaxyx()
 		self.X, self.Y = X-2, Y-2-1
 		
-	def statusline(self, str):
-		stdscr_y, stdscr_x = self.mscr.getmaxyx()
-		menu_y = (stdscr_y-3)-1
+		# initialisation
+		self.game = []
+		self.empty = self.game
+		self.positions = {'pacman' : (16,13), 'blinky' : (None, None), 'pinky' : (None, None), 'inky' : (None, None), 'clyde' : (None, None) }
+			# coordinates in format (y,x) !!!
+		
+		# colors initialisation
+		curses.init_pair(1, curses.COLOR_YELLOW, 0)
+		curses.init_pair(2, curses.COLOR_RED, 0)
+		curses.init_pair(3, curses.COLOR_MAGENTA, 0)
+		curses.init_pair(4, curses.COLOR_CYAN, 0)
+		curses.init_pair(5, curses.COLOR_GREEN, 0)
+		
+	def display_menu(self, stdscr=None, menu_y = None):
+		if menu_y == None:
+			stdscr_y, stdscr_x = self.mscr.getmaxyx()
+			menu_y = (stdscr_y-2)-1
+		if stdscr == None:
+			stdscr = self.mscr
+		stdscr.addstr(menu_y, 4,'R)estart Game, O)ptions, H)ighscores, C)redits, Q)uit')
+		
+	def draw_game(self, field):
+		# draws the field
+		self.scr.erase()
+		y = 0
+		x = 0
 		try:
-			self.mscr.addstr(menu_y+1, 4, " "*len(self.statuslinestr))
+			for _x in field:
+				for val in _x:
+					drawn = None
+					if val == False:
+						char = u'\u25A0'.encode("utf-8")
+						self.scr.addstr(y,x,char)
+					elif val == '*':
+						char = u'\u25cc'.encode("utf-8")
+						self.scr.addstr(y,x,char)
+					elif val == '<':
+						char = u'\u25c3'.encode("utf-8")
+						self.scr.addstr(y,x,char)
+					elif val == '>':
+						char = u'\u25b9'.encode("utf-8")
+						self.scr.addstr(y,x,char)
+					elif val == None:
+						char = u'\u00b7'.encode("utf-8")
+						self.scr.addstr(y,x,char)
+					elif val == 'C':
+						char = 'C'.encode("utf-8")
+						self.scr.addstr(y,x,char,curses.color_pair(1))
+					elif val == 'b':
+						char = u'\u2639'.encode("utf-8")
+						self.scr.addstr(y,x,char,curses.color_pair(2))
+					elif val == 'p':
+						char = u'\u2639'.encode("utf-8")
+						self.scr.addstr(y,x,char,curses.color_pair(3))
+					elif val == 'i':
+						char = u'\u2639'.encode("utf-8")
+						self.scr.addstr(y,x,char,curses.color_pair(4))
+					elif val == 'c':
+						char = u'\u2639'.encode("utf-8")
+						self.scr.addstr(y,x,char,curses.color_pair(5))
+					x += 1
+				y += 1
+				x = 0
+		except curses.error:
+			self.statusline('ERROR: Terminal too small?', 2)
+		
+		self.display_menu()
+		self.scr.refresh()
+		
+	def start_game(self, fieldfile):
+		# reset and read file
+		self.scr.erase()
+		field = open(fieldfile, 'r').read().strip()
+		self.game = []
+		tmp = []
+		
+		# lines
+		y = 0
+		x = 0
+		try:
+			for char in field:
+				arr = char
+				if char == 'X':
+					arr = False
+				elif char == 'v':
+					arr = None
+				elif char == '.':
+					arr = None
+				elif char == ' ':
+					arr = None
+				elif char == 'C':
+					arr = 'C'
+					pac = (y,x)
+				elif ord(char) == 10 or ord(char) == 13:
+					y += 1
+					x = 0
+					self.game.append(tmp)
+					tmp = []
+					continue
+				tmp.append(arr)
+				x += 1
+		except:
+			self.statusline('ERROR: Terminal too small?', 2)
+			
+		# Last line
+		y += 1
+		x = 0
+		self.game.append(tmp)
+		tmp = []
+		self.empty = self.game
+			
+		# to small?
+		if self.Y < len(self.game) or self.X < len(self.game[0]):
+			self.scr.erase()
+			self.scr.addstr(0,0,'ERROR: Terminal too small!',curses.color_pair(2))
+			self.display_menu()
+			self.scr.refresh()
+			return False
+			
+		self.maxX = len(self.game[0])-1
+		self.maxY = len(self.game)-1
+			
+		# draw!
+		self.positions = {'pacman' : pac, 'blinky' : (None, None), 'pinky' : (None, None), 'inky' : (None, None), 'clyde' : (None, None) }
+		
+		self.draw_game(self.game)
+		
+	def getempty(self, y, x):
+		# get original value of a field
+		empty = self.empty[y][x]
+		if empty in ('C', 'b', 'p', 'i', 'c'):
+			empty = None
+		return empty
+			
+		
+	def move(self, key):
+		# person hits a key ;)
+		
+		# key handlers
+		if key == curses.KEY_LEFT:
+			oldpos = self.positions['pacman']
+			newpos = (oldpos[0], oldpos[1]-1)
+		elif key == curses.KEY_RIGHT:
+			oldpos = self.positions['pacman']
+			newpos = (oldpos[0], oldpos[1]+1)
+		elif key == curses.KEY_UP:
+			oldpos = self.positions['pacman']
+			newpos = (oldpos[0]-1, oldpos[1])
+		elif key == curses.KEY_DOWN:
+			oldpos = self.positions['pacman']
+			newpos = (oldpos[0]+1, oldpos[1])
+		else:
+			return False
+			
+		# teleporters
+		if self.empty[newpos[0]][newpos[1]] == '<':
+			newpos = (oldpos[0], self.maxX-1)
+		elif self.empty[newpos[0]][newpos[1]] == '>':
+			newpos = (oldpos[0], 1)
+			
+		# a free field?
+		if self.empty[newpos[0]][newpos[1]] == None:
+			self.game[oldpos[0]][oldpos[1]] = self.getempty(oldpos[0], oldpos[1])
+			self.game[newpos[0]][newpos[1]] = 'C'
+			self.positions['pacman'] = newpos
+		
+		self.draw_game(self.game)
+			
+		
+	def statusline(self, str, col = None):
+		stdscr_y, stdscr_x = self.mscr.getmaxyx()
+		menu_y = (stdscr_y-2)-1
+		try:
+			if col == None:
+				self.mscr.addstr(menu_y+1, 4, " "*len(self.statuslinestr))
+			else:
+				self.mscr.addstr(menu_y+1, 4, " "*len(self.statuslinestr), curses.color_pair(col))				
 		except:
 			pass
 		self.statuslinestr = str
@@ -39,13 +213,15 @@ class Pacman:
 		return 0
 		
 	def display_credits(self):
+		self.scr.erase()
 		self.statusline('')
 		self.scr.addstr(0,0,"COPYRIGHT")
 		self.scr.addstr(1,5,"Copyright 2010 geeks' factory <www.geeksfactory.de>")
 		self.scr.addstr(3,0,"DEVELOPMENT")
 		self.scr.addstr(4,5,"Raphael Michel <pacman@raphaelmichel.de>")
 		self.scr.addstr(6,0,"LICENSE")
-		self.scr.addstr(7,5,"pacman.py is licensed under the terms of the GNU General Public license")
+		self.scr.addstr(7,5,"pacman-ncurses is licensed under the terms of the GNU General Public license")
 		self.scr.addstr(9,0,"THANKS")
 		self.scr.addstr(10,5,"to kiwi11000 for the idea ;-)")
+		self.display_menu()
 		self.scr.refresh()
