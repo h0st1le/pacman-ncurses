@@ -27,7 +27,6 @@ locale.setlocale(locale.LC_ALL,"")
 
 pac = None
 t = None
-a = 0
 
 def keyloop(stdscr):
 	# Main loop:
@@ -62,9 +61,9 @@ def keyloop(stdscr):
 			
 
 def timer():
-	global pac,a
+	global pac
+	pac.timer()
 	sleep(1)
-	a += 1
 	timer()
 	
 def main(stdscr):
@@ -86,18 +85,7 @@ def main(stdscr):
 	
 	thread.exit()
 	
-	#t_main = Thread(target = keyloop, args = (stdscr,))
-	#t_main.start()
-	
-	#t_timer = Thread(target = timer)
-	#t_timer.start()
-	
-	#while True:
-	#	if not t_main.isAlive or not t_timer.isAlive:
-	#		break
-	
 	return 0
 
 if __name__ == '__main__':
 	curses.wrapper(main)
-	print a

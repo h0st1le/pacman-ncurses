@@ -67,6 +67,7 @@ KEYS
 		
 	def back(self):
 		# return to the game window after viewing for example the credits
+		if not self.gaming: return False
 		self.draw_game(self.game)
 		
 	def display_mainmenu(self, stdscr=None, menu_y = None):
@@ -206,6 +207,7 @@ KEYS
 			self.scr.addstr(0,0,'ERROR: Terminal too small!',curses.color_pair(2))
 			self.display_menu()
 			self.scr.refresh()
+			self.gaming = False
 			return False
 			
 		self.maxX = len(self.game[0])-1
@@ -290,3 +292,7 @@ THANKS
   to kiwi11000 for the idea ;-)""")
 		self.display_menu()
 		self.scr.refresh()
+
+	def timer(self):
+		# called recursively with 1s delay after one call
+		pass 
