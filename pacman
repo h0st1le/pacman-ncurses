@@ -20,23 +20,22 @@
 #       Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #       MA 02110-1301, USA.
 
-import curses, pacman, locale
+import curses, pacman, locale, sys, os
+from time import sleep
+import thread
 locale.setlocale(locale.LC_ALL,"")
 
+pac = None
+t = None
+a = 0
+
 def keyloop(stdscr):
-	stdscr.clear()
-	curses.start_color()
-	stdscr_y, stdscr_x = stdscr.getmaxyx()
-	menu_y = (stdscr_y-2)-1
-	
-	subwin = stdscr.subwin(stdscr_y-2, stdscr_x, 0, 0)
-
-	pac = pacman.Pacman(subwin, stdscr)
-	pac.display_startmenu(stdscr, menu_y)
-
 	# Main loop:
 	while (1):  
-		c = stdscr.getch()        
+		try:
+			c = stdscr.getch()     
+		except KeyboardInterrupt:
+			break   
 		if 0<c<256:
 			c = chr(c)
 			if c in 'Qq':
@@ -59,11 +58,46 @@ def keyloop(stdscr):
 		elif c == curses.KEY_LEFT: pac.move(curses.KEY_LEFT)
 		elif c == curses.KEY_RIGHT: pac.move(curses.KEY_RIGHT)
 		else:
-			pass         
+			pass    
+			
 
+def timer():
+	global pac,a
+	sleep(1)
+	a += 1
+	timer()
+	
 def main(stdscr):
+	global pac, t
+	
+	stdscr.clear()
+	curses.start_color()
+	stdscr_y, stdscr_x = stdscr.getmaxyx()
+	menu_y = (stdscr_y-2)-1
+	
+	subwin = stdscr.subwin(stdscr_y-2, stdscr_x, 0, 0)
+
+	pac = pacman.Pacman(subwin, stdscr)
+	pac.display_startmenu(stdscr, menu_y)
+	
+	t = thread.start_new_thread(timer, ())
+	
 	keyloop(stdscr)
+	
+	thread.exit()
+	
+	#t_main = Thread(target = keyloop, args = (stdscr,))
+	#t_main.start()
+	
+	#t_timer = Thread(target = timer)
+	#t_timer.start()
+	
+	#while True:
+	#	if not t_main.isAlive or not t_timer.isAlive:
+	#		break
+	
 	return 0
 
 if __name__ == '__main__':
-    curses.wrapper(main)
+	curses.wrapper(main)
+	print a

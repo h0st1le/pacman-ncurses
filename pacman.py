@@ -33,6 +33,7 @@ class Pacman:
 		# initialisation
 		self.game = []
 		self.empty = self.game
+		self.gaming = False
 		self.positions = {'pacman' : (16,13), 'blinky' : (None, None), 'pinky' : (None, None), 'inky' : (None, None), 'clyde' : (None, None) }
 			# coordinates in format (y,x) !!!
 		
@@ -54,14 +55,14 @@ ELEMENTS
   \u25c3\u25b9 teleporters
   \u25cc  home of the ghosts
 KEYS
-  arrow keys to move
-  S/R   start a new game
-  O     show and edit some options
-  H     show highscores
-  C     show credits
-  Q     quit game
-  P     pause game
-  B     return to game""".encode("utf-8"))
+  arrow  keys to move
+  S/R    start a new game
+  O      show and edit some options
+  H      show highscores
+  C      show credits
+  Q      quit game
+  P      pause game
+  B      return to game""".encode("utf-8"))
 		self.scr.refresh()
 		
 	def back(self):
@@ -93,12 +94,15 @@ KEYS
 		stdscr.addstr(menu_y, 4,'B)ack to game, O)ptions, H)ighscores, C)redits, Q)uit')
 		
 	def pause_game(self):
+		if not self.gaming: return False
 		self.running = False
 		
 	def resume_game(self):
+		if not self.gaming: return False
 		self.running = True
 		
 	def toggle_pause(self):
+		if not self.gaming: return False
 		if self.running == False: self.running = True
 		else: self.running = False
 		
@@ -159,6 +163,7 @@ KEYS
 		field = open(fieldfile, 'r').read().strip()
 		self.game = []
 		tmp = []
+		self.gaming = True
 		
 		# lines
 		y = 0
@@ -221,6 +226,7 @@ KEYS
 		
 	def move(self, key):
 		# person hits a key ;)
+		if not self.gaming: return False
 		
 		# key handlers
 		if key == curses.KEY_LEFT:
